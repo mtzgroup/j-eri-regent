@@ -1,4 +1,4 @@
-# eri-regent
+# j-eri-regent
 
 Standalone Regent code that calculates two-electron repulsion integrals (ERIs) to form the J matrix, a building block in many quantum chemistry methods. Regent enables straightforward execution on multiple architectures: CPUs, GPUs, and multiple nodes.
 
@@ -13,8 +13,9 @@ Running Regent code requires installing the Legion programming system. The depen
 - *Optional*: CUDA 5.0 or newer (for NVIDIA GPUs)
 - *Optional*: GASNet (for networking, see installation instructions here: https://legion.stanford.edu/gasnet/)
 
-#Installation
+### Legion Installation
 Optional arguments for compiling with GPU support (CUDA) and multi-node support (GASNet) are commented. 
+
 ```bash
 git clone https://gitlab.com/StanfordLegion/legion.git -b hijack_registration_hack
 export LEGION_SRC=$PWD/legion
@@ -31,28 +32,30 @@ $LEGION_SRC/language/scripts/setup_env.py --cmake  \
     --extra="-DCMAKE_INSTALL_PREFIX=$LEGION_INSTALL_PATH" \
     --extra="-DCMAKE_BUILD_TYPE=Release" \
     --extra="-DLegion_HIJACK_CUDART=OFF" \
-    --extra="--with-gasnet ${GASNET}" \                       # Optional, multi-node
-    --extra="--cuda" \                                        # Optional, GPU
+#   --extra="--with-gasnet ${GASNET}" \                       # Optional, multi-node
+#   --extra="--cuda" \                                        # Optional, GPU
 export REGENT=$LEGION_SRC/language/regent.py
 alias regent=$REGENT
 ```
 
 Further information on Legion installation can be found here: https://legion.stanford.edu/starting/
 
-```bash
-git clone https://gitlab.com/StanfordLegion/legion.git -b hijack_registration_hack
-export LEGION_DIR=$PWD/legion
-```
+## Running
 
-Edit $LEGION_DIR/runtime/realm/cuda/cuda_module.cc at line 2656 to insert the following line:
+### Running a pre-compiled version
 
-```
-if(i<1)continue;
-```
+### Notes on angular momentum and compilation time
 
-```
-git clone https://github.com/StanfordLegion/gasnet.git
-````
+Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` option. This will tell Lua to produce the correct number of Regent tasks. Higher angular momentums need more and larger kernels which can take a longer time to compile to CUDA code. The number of J kernels needed is <code>(2L-1)<sup>2</sup></code>.
+
+| Angular Momentum | Number of J Kernels | Memory     | Compilation wall-time |
+|:----------------:|:-------------------:|:----------:|:---------------------:|
+| S = 1            | 1                   | Negligible | < 1 Minute            |
+| P = 2            | 9                   | 2 GB       | 2 Minutes             |
+| D = 3            | 25                  | > 4 GB     | > 5 Minutes           |
+| F = 4            | 49                  | > 7 GB     | > 7 Minutes           |
+| G = 5            | 81                  | > 31 GB    | > 1 Hour              |
+
 
 ### Submodule
 
