@@ -43,6 +43,7 @@ Further information on Legion installation can be found here: https://legion.sta
 ### Pull j-eri-regent code
 ```bash
 git clone https://github.com/GraceJohnson/j-eri-regent.git
+#TODO: change this to mtzgroup when finalized
 ```
 
 ## Running
@@ -54,11 +55,11 @@ alias regent=$REGENT
 ```
 Run with Regent using `top_jfock.rg` which contains the top level task, the Regent equivalent of main in C/C++.
 ```bash
-cd j-eri-regent
+cd j-eri-regent/src
 # To run J matrix algorithm:
-regent top_jfock.rg -L P -i tests/integ/h2o -v tests/integ/h2o/output.dat
+regent top_jfock.rg -L P -i ../tests/h2o -v ../tests/h2o/output.dat
 # To partition tasks and run in parallel on 2 GPUs:
-regent top_jfock.rg -L P -i tests/integ/h2o -v tests/integ/h2o/output.dat -p 2 -ll:gpu 2
+regent top_jfock.rg -L P -i ../tests/h2o -v ../tests/h2o/output.dat -p 2 -ll:gpu 2
 ```
 #### Options
 - `-L [S|P|D|F|G]` specifies the max angular momentum. Compiler will generate all kernels up to and including those containing `L`.
@@ -86,16 +87,16 @@ Each test has sample data generated from TeraChem on the first SCF iteration of 
 
 New input tests can be generated for any systems/angular momenta by conforming to the file formats in the `.dat` files (i.e. separated by angular momentum group, written in hex, labeled, and in the Hermite basis).
 
-#### Code structure
-- `j-eri-regent` contains the top level task (`top_jfock.rg`), the driver for kernel generation and execution (`jfock.rg`), region specifications (`fields.rg`) and helper functions (`helper.rg`).
-- `j-eri-regent/utils` contains code to read and parse inputs
-- `j-eri-regent/md` contains all code to compute intergrals using the McMurchie-Davidson algorithm
+### Code structure
+- `src`: contains the top level task in`top_jfock.rg`, the driver for kernel generation and execution in `jfock.rg`, region specifications in `fields.rg`, and helper functions in `helper.rg`.
+- `src/utils`: code to read and parse inputs
+- `src/md`: code to compute intergrals using the McMurchie-Davidson algorithm
 
 ### Running a pre-compiled version
 
 ### Notes on angular momentum and compilation time
 
-Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` option. This will tell Lua to produce the correct number of Regent tasks. Higher angular momentums need more and larger kernels which can take a longer time to compile to CUDA code. The number of J kernels needed is <code>(2L-1)<sup>2</sup></code>.
+Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` option. This will tell Lua to produce the correct number of Regent tasks. Higher angular momenta require more and larger kernels which can take a longer time to compile to CUDA code. The number of J kernels needed is <code>(2L-1)<sup>2</sup></code>.
 
 | Max Angular Momentum | Number of J Kernels | Memory     | Compilation wall-time |
 |:--------------------:|:-------------------:|:----------:|:---------------------:|
