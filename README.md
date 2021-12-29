@@ -61,6 +61,8 @@ regent top_jfock.rg -L P -i ../tests/h2o -v ../tests/h2o/output.dat
 # To partition tasks and run in parallel on 2 GPUs:
 regent top_jfock.rg -L P -i ../tests/h2o -v ../tests/h2o/output.dat -p 2 -ll:gpu 2
 ```
+Note that this command will both compile and execute the Regent code.
+
 #### Options
 - `-L [S|P|D|F|G]` specifies the max angular momentum. Compiler will generate all kernels up to and including those containing `L`.
 - `-i` specifies path to directory containing input files (see below)
@@ -92,8 +94,6 @@ New input tests can be generated for any systems/angular momenta by conforming t
 - `src/utils`: code to read and parse inputs
 - `src/md`: code to compute intergrals using the McMurchie-Davidson algorithm
 
-### Running a pre-compiled version
-
 ### Notes on angular momentum and compilation time
 
 Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` option. This will tell Lua to produce the correct number of Regent tasks. Higher angular momenta require more and larger kernels which can take a longer time to compile to CUDA code. The number of J kernels needed is <code>(2L-1)<sup>2</sup></code>.
@@ -105,4 +105,3 @@ Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` op
 | D = 2                | 25                  | > 4 GB     | > 5 Minutes           |
 | F = 3                | 49                  | > 7 GB     | > 7 Minutes           |
 | G = 4                | 81                  | > 31 GB    | > 1 Hour              |
-
