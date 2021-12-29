@@ -40,7 +40,56 @@ alias regent=$REGENT
 
 Further information on Legion installation can be found here: https://legion.stanford.edu/starting/
 
+### Pull j-eri-regent code
+```bash
+git clone https://github.com/GraceJohnson/j-eri-regent.git
+```
+
 ## Running
+
+```bash
+export LEGION_SRC=<path to dir with Legion build>/legion
+export REGENT=$LEGION_SRC/language/regent.py
+alias regent=$REGENT
+```
+Run with Regent using `top_jfock.rg` which contains the top level task, the Regent equivalent of main in C/C++.
+```bash
+cd j-eri-regent
+# To run J matrix algorithm:
+regent top_jfock.rg -L P -i tests/integ/h2o -v tests/integ/h2o/output.dat
+# To partition tasks and run in parallel on 2 GPUs:
+regent top_jfock.rg -L P -i tests/integ/h2o -v tests/integ/h2o/output.dat -p 2 -ll:gpu 2
+```
+#### Options
+- `-L [S|P|D|F|G]` specifies the max angular momentum. Compiler will generate all kernels up to and including those containing `L`.
+- `-i` specifies path to directory containing input files (see below)
+- `-v` verify output with reference data in this file (see below)
+- `-p` specifies the number of partitions of each integral task. Default is 1.
+- `-ll:gpu` directive passed to Legion specifying the number of GPUs to parallelize across.
+- `-ll:cpu` directive passed to Legion specifying the number of CPUs to parallelize across. See all Legion command-line flags here: https://legion.stanford.edu/starting/
+- `-fflow 0` compiles kernels faster
+- `-h` print usage (including these and more options) and exit
+
+#### Tests
+The `tests` directory contains 5 tests on different systems with different max angular momentum:
+- `h2`: one hydrogen molecule, 6-311g basis. L = S
+- `h2o`: one water molecule, 6-311g basis. L = P
+- `co2`: one carbon dioxide molecule, 6-311g basis. L = P
+- `dna-pair`: one DNA base pair, 6-31g basis. L = P
+- `fe`: one iron atom, 6-31g basis. L = D
+
+Each test has sample data generated from TeraChem on the first SCF iteration of an RHF calculation in the same manner as described in the paper.
+- `bras.dat` coordinates (x,y,x) and Gaussian basis information (eta, C) of the bra in the Hermite basis
+- `kets.dat` coordinates (x,y,x) and Gaussian basis information (eta, C) of the ket in the Hermite basis  and corresponding density value(s)
+- `parameters.dat` parameters from TeraChem input, only `thredp` is currrently used (for Schwartz screening)
+- `output.dat` output data (in Hermite basis) generated from TeraChem used to verify the Regent calculation
+
+New input tests can be generated for any systems/angular momenta by conforming to the file formats in the `.dat` files (i.e. separated by angular momentum group, written in hex, labeled, and in the Hermite basis).
+
+#### Code structure
+- `j-eri-regent` contains the top level task (`top_jfock.rg`), the driver for kernel generation and execution (`jfock.rg`), region specifications (`fields.rg`) and helper functions (`helper.rg`).
+- `j-eri-regent/utils` contains code to read and parse inputs
+- `j-eri-regent/md` contains all code to compute intergrals using the McMurchie-Davidson algorithm
 
 ### Running a pre-compiled version
 
@@ -48,109 +97,11 @@ Further information on Legion installation can be found here: https://legion.sta
 
 Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` option. This will tell Lua to produce the correct number of Regent tasks. Higher angular momentums need more and larger kernels which can take a longer time to compile to CUDA code. The number of J kernels needed is <code>(2L-1)<sup>2</sup></code>.
 
-| Angular Momentum | Number of J Kernels | Memory     | Compilation wall-time |
-|:----------------:|:-------------------:|:----------:|:---------------------:|
-| S = 1            | 1                   | Negligible | < 1 Minute            |
-| P = 2            | 9                   | 2 GB       | 2 Minutes             |
-| D = 3            | 25                  | > 4 GB     | > 5 Minutes           |
-| F = 4            | 49                  | > 7 GB     | > 7 Minutes           |
-| G = 5            | 81                  | > 31 GB    | > 1 Hour              |
+| Max Angular Momentum | Number of J Kernels | Memory     | Compilation wall-time |
+|:--------------------:|:-------------------:|:----------:|:---------------------:|
+| S = 0                | 1                   | Negligible | < 1 Minute            |
+| P = 1                | 9                   | 2 GB       | 2 Minutes             |
+| D = 2                | 25                  | > 4 GB     | > 5 Minutes           |
+| F = 3                | 49                  | > 7 GB     | > 7 Minutes           |
+| G = 4                | 81                  | > 31 GB    | > 1 Hour              |
 
-
-### Submodule
-
-Normally this project (eri-regent) is a submodule of the larger TeraChem project and is located at production/regintbox/src/eri-regent.  
-When this is the case you should build Legion using the scripts in production/scripts/xstream, such as build_legion_k80.bash.
-
-### Standalone
-
-If you are building eri-regent in a standalone configuration follow these instructions:
-
-When more than 1 GB of memory is needed, you must build Legion with `luajit2.1`.
-Instructions for building on Ubuntu Linux:
-
-```bash
-cd $LEGION_DIR/language
-./install.py --cmake --terra-url https://github.com/StanfordLegion/terra.git --terra-branch luajit2.1
-make -C build install
-export REGENT=/usr/local/bin/regent.py
-alias regent=$REGENT
-```
-
-Instructions for building on xstream:
-```bash
-cd $LEGION_DIR/language
-module load GCC/4.9.2-binutils-2.25  
-module load OpenMPI/1.8.5
-module load Python/3.6.0
-module load CMake/3.5.2
-module load CUDA/8.0.61
-module load LLVM/3.7.0
-export CONDUIT=ibv
-export USE_CUDA=1
-export CUDA=$CUDA_HOME
-export CC=gcc
-export CXX=g++
-export LEGION_SRC=$HOME/work/legion
-export LEGION_INSTALL_PATH=$HOME/work/legion_install
-./scripts/setup_env.py --cmake  --terra-url https://github.com/StanfordLegion/terra.git --terra-branch luajit2.1 --extra=-DCMAKE_INSTALL_PREFIX=$LEGION_INSTALL_PATH
-export REGENT=$LEGION_DIR/language/regent.py
-alias regent=$REGENT
-```
-
-## Building
-
-Use the Makefile to compile and run inside C++. This will generate a header file and a library for the eri tasks so they can be called within C++. The Makefile assumes the `RG_MAX_MOMENTUM` environment variable has been set. If you want to compile for a new `RG_MAX_MOMENTUM` then you need to run `make rg.clean` before the environment variable will affect the build.
-
-```bash
-cd eri-regent
-export RG_MAX_MOMENTUM=P
-make
-```
-
-## Running and Testing
-Run with Regent using `top_jfock.rg` or `top_kfock.rg` inside `src/` for testing. Note that running eri-regent with this method does not require you to run `make`.
-
-```bash
-cd eri-regent/src
-# To run JFock algorithm
-regent top_jfock.rg -L P -i tests/integ/h2o -v tests/integ/h2o/output.dat
-# To run KFock algorithm
-regent top_kfock.rg -L S -i tests/integ/h2 -v tests/integ/h2/kfock_output.dat
-# Use option `-fflow 0` to compile eri-regent faster
-```
-
-To test eri-regent with C++, compile the test program inside `src/tests/cpp` after building eri-regent.
-```bash
-cd eri-regent/src/tests/cpp
-make
-```
-
-This will produce a binary inside `eri-regent/build`.
-```bash
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LEGION_DIR/language/build/lib/
-cd eri-regent
-# To run JFock algorithm
-build/eri_regent_test -i src/tests/integ/h2o -a jfock
-# To run KFock algorithm
-build/eri_regent_test -i src/tests/integ/h2o -a kfock
-```
-
-### Higher Angular Momentum Systems
-
-Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` option. This will tell Lua to produce the correct number of Regent tasks. Higher angular momentums need more and larger kernels which can take a long time to compile to Cuda code. The number of J kernels needed is <code>(2L-1)<sup>2</sup></code> and the number of K kernels needed is <code>L<sup>2</sup> * (L<sup>2</sup> + 1) / 2</code>.
-
-| Angular Momentum | Number of J Kernels | Number of K Kernels | Memory     | Wall-time   |
-|:----------------:|:-------------------:|:-------------------:|:----------:|:-----------:|
-| S = 1            | 1                   | 1                   | Negligible | < 1 Minute  |
-| P = 2            | 9                   | 10                  | 2 GB       | 2 Minutes   |
-| D = 3            | 25                  | 45                  | > 4 GB     | > 5 Minutes |
-| F = 4            | 49                  | 136                 | > 7 GB     | > 7 Minutes |
-| G = 5            | 81                  | 325                 | > 31 GB    | > 1 Hour    |
-
-## Testing with Python3
-First compile the test program in `eri-regent/src/tests/cpp`, then you can use `python3` to run the binary on all test inputs.
-```bash
-python scripts/test.py
-python scripts/test_boys.py
-```
