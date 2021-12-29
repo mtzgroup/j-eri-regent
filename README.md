@@ -105,3 +105,6 @@ Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` op
 | D = 2                | 25                  | > 4 GB     | > 5 Minutes           |
 | F = 3                | 49                  | > 7 GB     | > 7 Minutes           |
 | G = 4                | 81                  | > 31 GB    | > 1 Hour              |
+
+## Regent Vim settings
+Normal text editor settings do not format Regent code. If you would like to enable these features in your Vim settings, please follow the instructions here: https://github.com/StanfordLegion/regent.vim
