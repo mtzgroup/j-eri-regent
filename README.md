@@ -68,8 +68,8 @@ Note that this command will both compile and execute the Regent code.
 - `-i` specifies path to directory containing input files (see below)
 - `-v` verify output with reference data in this file (see below)
 - `-p` specifies the number of partitions of each integral task. Default is 1.
-- `-ll:gpu` directive passed to Legion specifying the number of GPUs to parallelize across.
-- `-ll:cpu` directive passed to Legion specifying the number of CPUs to parallelize across. See all Legion command-line flags here: https://legion.stanford.edu/starting/
+- `-ll:gpu` directive passed to Legion specifying the number of GPUs per node to parallelize across.
+- `-ll:cpu` directive passed to Legion specifying the number of CPUs per node to parallelize across. See all Legion command-line flags here: https://legion.stanford.edu/starting/
 - `-fflow 0` compiles kernels faster
 - `-h` print usage (including these and more options) and exit
 
@@ -89,12 +89,12 @@ Each test has sample data generated from TeraChem on the first SCF iteration of 
 
 New input tests can be generated for any systems/angular momenta by conforming to the file formats in the `.dat` files (i.e. separated by angular momentum group, written in hex, labeled, and in the Hermite basis).
 
-### Code structure
+## Code structure
 - `src`: contains the top level task in`top_jfock.rg`, the driver for kernel generation and execution in `jfock.rg`, region specifications in `fields.rg`, and helper functions in `helper.rg`.
 - `src/utils`: code to read and parse inputs
 - `src/md`: code to compute intergrals using the McMurchie-Davidson algorithm
 
-### Notes on angular momentum and compilation time
+## Notes on angular momentum and compilation time
 
 Be sure to select the appropriate angular momentum using the `-L [S|P|D|F|G]` option. This will tell Lua to produce the correct number of Regent tasks. Higher angular momenta require more and larger kernels which can take a longer time to compile to CUDA code. The number of J kernels needed is <code>(2L-1)<sup>2</sup></code>.
 
