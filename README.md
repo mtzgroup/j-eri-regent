@@ -42,8 +42,7 @@ Further information on Legion installation can be found here: https://legion.sta
 
 ### Pull j-eri-regent code
 ```bash
-git clone https://github.com/GraceJohnson/j-eri-regent.git
-#TODO: change this to mtzgroup when finalized
+git clone https://github.com/mtzgroup/j-eri-regent
 ```
 
 ## Running
