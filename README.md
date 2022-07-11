@@ -74,19 +74,23 @@ Note that this command will both compile and execute the Regent code.
 
 #### Tests
 The `tests` directory contains 5 tests on different systems with different max angular momentum:
-- `h2`: one hydrogen molecule, 6-311g basis. L = S
-- `h2o`: one water molecule, 6-311g basis. L = P
-- `co2`: one carbon dioxide molecule, 6-311g basis. L = P
-- `dna-pair`: one DNA base pair, 6-31g basis. L = P
-- `fe`: one iron atom, 6-31g basis. L = D
+- `h2`: one hydrogen molecule, 6-311G basis. L = S
+- `h2o`: one water molecule, 6-311G basis. L = P
+- `co2`: one carbon dioxide molecule, 6-311G basis. L = P
+- `fe`: one iron atom, 6-31G basis. L = D
+- `dna-pair_6-31g`: one DNA base pair, 6-31G basis. L = P
+- `dna-pair_6-31gs`: one DNA base pair, 6-31G\* basis. L = D
+- `dna-pair_cc-pvdz`: one DNA base pair, cc-pVDZ basis. L = D
+- `dna-pair_cc-pvtz`: one DNA base pair, cc-pVTZ basis. L = F
+- `dna-pair_cc-pvqz`: one DNA base pair, cc-pVQZ basis. L = G
 
 Each test has sample data generated from TeraChem on the first SCF iteration of an RHF calculation in the same manner as described in the paper.
 - `bras.dat` coordinates (x,y,x) and Gaussian basis information (eta, C) of the bra in the Hermite basis
 - `kets.dat` coordinates (x,y,x) and Gaussian basis information (eta, C) of the ket in the Hermite basis  and corresponding density value(s)
 - `parameters.dat` parameters from TeraChem input, only `thredp` is currrently used (for Schwartz screening)
-- `output.dat` output data (in Hermite basis) generated from TeraChem used to verify the Regent calculation
+- `output.dat` output data (J matrix in Hermite basis) generated from TeraChem used to verify the Regent calculation
 
-New input tests can be generated for any systems/angular momenta by conforming to the file formats in the `.dat` files (i.e. separated by angular momentum group, written in hex, labeled, and in the Hermite basis).
+New input tests can be generated for any systems/angular momenta by conforming to the file formats in the `.dat` files (i.e. separated by angular momentum group, written in hex, labeled, and with density and J in the Hermite basis).
 
 ## Code structure
 - `src`: contains the top level task in`top_jfock.rg`, the driver for kernel generation and execution in `jfock.rg`, region specifications in `fields.rg`, and helper functions in `helper.rg`.
